@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+
+# Build output (we generate this inside Docker)
+dist
+
+# Development files not needed in production
+.git
+.gitignore
+*.md
+.env*.local
+
+# IDE files
+.vscode
+.idea
+
+# Logs
+*.log
+npm-debug.log*
