@@ -1,0 +1,113 @@
+# =============================================================================
+# 🚀 React Docker CI Pipeline
+# =============================================================================
+# 
+# EE WORKFLOW EEMI CHESTHUNDHI? (Telugu Explanation)
+# ═════════════════════════════════════════════════
+# 
+# 1. Code push ayinappudu trigger avuthundhi
+# 2. GitHub's Ubuntu VM (runner) meeda run avuthundhi
+# 3. Docker image build chesthundhi
+# 4. GitHub Container Registry (GHCR) ki push chesthundhi
+#
+# NEE PC - NOT INVOLVED! GitHub servers anni chesthay!
+# =============================================================================
+
+name: 🐳 React Docker Build
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TRIGGER: When should this workflow run?
+# ═══════════════════════════════════════════════════════════════════════════
+on:
+  push:
+    branches: [main]
+    paths:
+      - '03-react-pipeline/todo-frontend/**'  # Only run when React code changes!
+  pull_request:
+    branches: [main]
+    paths:
+      - '03-react-pipeline/todo-frontend/**'
+  
+  # Manual trigger button in GitHub UI
+  workflow_dispatch:
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ENVIRONMENT VARIABLES (Global)
+# ═══════════════════════════════════════════════════════════════════════════
+env:
+  REGISTRY: ghcr.io                                     # GitHub Container Registry
+  IMAGE_NAME: ${{ github.repository }}/todo-frontend    # pdheeraj99/github-actions-learning/todo-frontend
+
+# ═══════════════════════════════════════════════════════════════════════════
+# JOBS: What work to do?
+# ═══════════════════════════════════════════════════════════════════════════
+jobs:
+  
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 1: Build and Push Docker Image
+  # ─────────────────────────────────────────────────────────────────────────
+  build-and-push:
+    name: 🏗️ Build & Push Docker Image
+    
+    # Which machine to run on? (GitHub provides this!)
+    # Telugu: "GitHub, naku oka Ubuntu VM ichhi!" 
+    runs-on: ubuntu-latest
+    
+    # Permissions for GHCR push
+    permissions:
+      contents: read
+      packages: write
+    
+    # ───────────────────────────────────────────────────────────────────────
+    # STEPS: Sequence of actions
+    # ───────────────────────────────────────────────────────────────────────
+    steps:
+      
+      # STEP 1: Clone repository to runner
+      # Telugu: "Nee code ni GitHub VM ki download cheyyi"
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+      
+      # STEP 2: Login to GitHub Container Registry
+      # Telugu: "GHCR ki login avvu - image push cheyyadaniki permission"
+      - name: 🔐 Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}              # Nee GitHub username
+          password: ${{ secrets.GITHUB_TOKEN }}      # Automatic secret - setup avasaram ledu!
+      
+      # STEP 3: Setup Docker Buildx (advanced builder)
+      # Telugu: "Docker Buildx = Modern builder with better caching"
+      - name: 🔧 Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      # STEP 4: Extract metadata for Docker image
+      # Telugu: "Image ki tags and labels prepare cheyyi"
+      - name: 📋 Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=                           # git short sha: abc123
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+      
+      # STEP 5: Build and Push Docker Image! 🚀
+      # Telugu: "Docker build AND push - oka step lo rendu!"
+      - name: 🐳 Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./03-react-pipeline/todo-frontend   # Dockerfile location
+          push: ${{ github.event_name != 'pull_request' }}  # PR aithe push kaadu
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha                         # GitHub Actions cache use!
+          cache-to: type=gha,mode=max                  # Cache save for next builds!
+      
+      # STEP 6: Print success message
+      - name: ✅ Build Complete
+        run: |
+          echo "🎉 Docker image built successfully!"
+          echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          echo "🏷️ Tags: ${{ steps.meta.outputs.tags }}"
