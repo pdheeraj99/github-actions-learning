@@ -1,0 +1,5 @@
+# Created at 2025-12-18T21:59:40.932
+Boot Manifest-JAR contains absolute paths in classpath 'D:\Antigravity_Projects\Github_Actions\02-spring-boot-pipeline\todo-backend\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+

@@ -1,0 +1,156 @@
+# ================================
+# Spring Boot Todo Backend Pipeline
+# ================================
+# This workflow builds, tests, and deploys the Spring Boot backend
+#
+# Triggers:
+# - Push to main branch (when backend files change)
+# - Pull requests to main
+# - Manual trigger (workflow_dispatch)
+
+name: 🚀 Spring Boot CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '02-spring-boot-pipeline/**'
+      - '.github/workflows/spring-boot-build.yml'
+  
+  pull_request:
+    branches: [main]
+    paths:
+      - '02-spring-boot-pipeline/**'
+  
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests (use with caution!)'
+        required: false
+        default: 'false'
+        type: boolean
+
+# Environment variables
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/todo-backend
+  JAVA_VERSION: '17'
+
+jobs:
+  # ================================
+  # Job 1: Build and Test
+  # ================================
+  build-and-test:
+    name: 🔨 Build & Test
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./02-spring-boot-pipeline/todo-backend
+    
+    steps:
+      # Step 1: Checkout code
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Java
+      - name: ☕ Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      # Step 3: Build with Maven
+      - name: 🔨 Build with Maven
+        run: mvn clean compile -B
+
+      # Step 4: Run Tests
+      - name: 🧪 Run Tests
+        if: ${{ github.event.inputs.skip_tests != 'true' }}
+        run: mvn test -B
+
+      # Step 5: Package JAR
+      - name: 📦 Package JAR
+        run: mvn package -DskipTests -B
+
+      # Step 6: Upload test results
+      - name: 📊 Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./02-spring-boot-pipeline/todo-backend/target/surefire-reports/
+          retention-days: 7
+
+      # Step 7: Upload JAR artifact
+      - name: 📦 Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: todo-backend-jar
+          path: ./02-spring-boot-pipeline/todo-backend/target/*.jar
+          retention-days: 7
+
+  # ================================
+  # Job 2: Docker Build and Push
+  # ================================
+  docker-build:
+    name: 🐳 Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    
+    # Only run on main branch push (not PRs)
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # Step 1: Checkout
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Login to GHCR
+      - name: 🔐 Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 3: Setup Buildx
+      - name: 🔧 Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 4: Extract metadata
+      - name: 📋 Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      # Step 5: Build and Push
+      - name: 🐳 Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./02-spring-boot-pipeline/todo-backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Step 6: Print image info
+      - name: 📝 Image Summary
+        run: |
+          echo "## 🎉 Docker Image Published!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

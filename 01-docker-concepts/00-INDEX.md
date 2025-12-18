@@ -22,6 +22,7 @@ Step-by-step chadhuvuko - chala clarity vasthundhi!
 | 9 | [09-npm-ci-vs-install.md](./09-npm-ci-vs-install.md) | CI/CD lo npm ci enduku? | 10 min |
 | 10 | [10-interview-questions.md](./10-interview-questions.md) | 40LPA+ Interview prep! 🎯 | 20 min |
 | 11 | [11-github-runners.md](./11-github-runners.md) | GitHub Actions - Docker ekkada run avuthundhi? | 10 min |
+| 12 | [12-github-actions-explained.md](./12-github-actions-explained.md) | Complete workflow file explanation! | 20 min |
 
 ---
 
