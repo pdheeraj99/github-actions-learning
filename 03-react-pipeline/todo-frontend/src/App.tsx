@@ -10,9 +10,10 @@ interface Todo {
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([
-    { id: 1, text: 'Learn GitHub Actions 🚀', completed: false, createdAt: new Date() },
+    { id: 1, text: 'Learn GitHub Actions 🚀', completed: true, createdAt: new Date() },
     { id: 2, text: 'Build Docker Image 🐳', completed: false, createdAt: new Date() },
     { id: 3, text: 'Deploy to Kubernetes ☸️', completed: false, createdAt: new Date() },
+    { id: 4, text: 'Push to GHCR 📦', completed: false, createdAt: new Date() },
   ])
   const [newTodo, setNewTodo] = useState('')
 
