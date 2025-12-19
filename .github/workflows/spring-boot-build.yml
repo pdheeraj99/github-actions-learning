@@ -27,7 +27,7 @@ on:
       skip_tests:
         description: 'Skip tests (use with caution!)'
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 # Environment variables
@@ -70,7 +70,19 @@ jobs:
         if: ${{ github.event.inputs.skip_tests != 'true' }}
         run: mvn test -B
 
-      # Step 5: Package JAR
+      # Step 5: SonarCloud Analysis
+      - name: 📊 SonarCloud Analysis
+        if: ${{ github.event.inputs.skip_tests != 'true' }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=pdheeraj99_github-actions-learning \
+            -Dsonar.organization=pdheeraj99 \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
+      # Step 6: Package JAR
       - name: 📦 Package JAR
         run: mvn package -DskipTests -B
 
