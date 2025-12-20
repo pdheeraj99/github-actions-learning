@@ -1,28 +1,9 @@
 # ================================
-# Stage 1: BUILD
+# OPTIMIZED Dockerfile - No Build Stage!
 # ================================
-# Use Maven with JDK 17 for building
-FROM maven:3.9-eclipse-temurin-17-alpine AS build
+# Uses pre-built JAR from CI pipeline
+# Build happens in GitHub Actions, not in Docker
 
-# Set working directory
-WORKDIR /app
-
-# Copy pom.xml first (for dependency caching)
-COPY pom.xml .
-
-# Download dependencies (cached if pom.xml unchanged)
-RUN mvn dependency:go-offline -B
-
-# Copy source code
-COPY src ./src
-
-# Build the application (skip tests - already run in CI)
-RUN mvn package -DskipTests -B
-
-# ================================
-# Stage 2: PRODUCTION
-# ================================
-# Use lightweight JRE for running
 FROM eclipse-temurin:17-jre-alpine
 
 # Add labels for GitHub Container Registry
@@ -36,8 +17,9 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 # Set working directory
 WORKDIR /app
 
-# Copy JAR from build stage
-COPY --from=build /app/target/*.jar app.jar
+# Copy pre-built JAR from CI pipeline
+# JAR is downloaded from Job 1 artifact before Docker build
+COPY target/*.jar app.jar
 
 # Change ownership to non-root user
 RUN chown -R appuser:appgroup /app
