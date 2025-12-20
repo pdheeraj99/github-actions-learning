@@ -1,17 +1,65 @@
-name: Clear all caches
+name: 🧹 Clear Caches & Artifacts
 on:
-  workflow_dispatch: # Manam manually trigger cheyadaniki
+  workflow_dispatch:
+    inputs:
+      delete_caches:
+        description: 'Delete all caches'
+        required: true
+        default: true
+        type: boolean
+      delete_artifacts:
+        description: 'Delete all artifacts'
+        required: true
+        default: true
+        type: boolean
 
 jobs:
-  clear-cache:
+  cleanup:
     runs-on: ubuntu-latest
     permissions:
-      actions: write    # Required to delete caches!
+      actions: write    # Required for cache and artifact deletion
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Clear cache
+
+      - name: 🗑️ Delete All Caches
+        if: ${{ inputs.delete_caches }}
         run: |
-          gh cache delete --all --repo ${{ github.repository }}
+          echo "🔍 Listing all caches..."
+          gh cache list --repo ${{ github.repository }}
+          
+          echo "🗑️ Deleting all caches..."
+          gh cache delete --all --repo ${{ github.repository }} || echo "No caches to delete"
+          
+          echo "✅ Cache cleanup complete!"
         env:
           GH_TOKEN: ${{ github.token }}
+
+      - name: 🗑️ Delete All Artifacts
+        if: ${{ inputs.delete_artifacts }}
+        run: |
+          echo "🔍 Fetching all artifacts..."
+          
+          # Get all artifact IDs and delete them
+          ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --jq '.artifacts[].id')
+          
+          if [ -z "$ARTIFACTS" ]; then
+            echo "No artifacts to delete"
+          else
+            for ARTIFACT_ID in $ARTIFACTS; do
+              echo "Deleting artifact ID: $ARTIFACT_ID"
+              gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID
+            done
+            echo "✅ Artifact cleanup complete!"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: 📊 Summary
+        run: |
+          echo "## 🧹 Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Caches | ${{ inputs.delete_caches && '✅ Deleted' || '⏭️ Skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifacts | ${{ inputs.delete_artifacts && '✅ Deleted' || '⏭️ Skipped' }} |" >> $GITHUB_STEP_SUMMARY
