@@ -1,0 +1,13 @@
+name: Clear all caches
+on:
+  workflow_dispatch: # Manam manually trigger cheyadaniki
+
+jobs:
+  clear-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clear cache
+        run: |
+          gh cache delete --all
+        env:
+          GH_TOKEN: ${{ github.token }}
