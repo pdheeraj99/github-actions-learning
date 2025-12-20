@@ -5,11 +5,13 @@ on:
 jobs:
   clear-cache:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write    # Required to delete caches!
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Clear cache
         run: |
-          gh cache delete --all --repo ${{ github.repository }} 
+          gh cache delete --all --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ github.token }}
