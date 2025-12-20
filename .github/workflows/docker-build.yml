@@ -44,14 +44,58 @@ env:
 jobs:
   
   # ─────────────────────────────────────────────────────────────────────────
-  # JOB 1: Build and Push Docker Image
+  # JOB 1: Lint and Build Check
+  # ─────────────────────────────────────────────────────────────────────────
+  lint-and-build:
+    name: 🔍 Lint & Build Check
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./03-react-pipeline/todo-frontend
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./03-react-pipeline/todo-frontend/package-lock.json
+      
+      - name: 📥 Install Dependencies
+        run: npm ci
+      
+      - name: 🔍 Run ESLint
+        run: npm run lint
+      
+      - name: 🏗️ Build Check
+        run: npm run build
+      
+      - name: 📊 Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: ./03-react-pipeline/todo-frontend/dist/
+          retention-days: 7
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 2: Build and Push Docker Image
   # ─────────────────────────────────────────────────────────────────────────
   build-and-push:
     name: 🏗️ Build & Push Docker Image
     
+    # This job WAITS for lint-and-build to pass!
+    needs: lint-and-build
+    
     # Which machine to run on? (GitHub provides this!)
     # Telugu: "GitHub, naku oka Ubuntu VM ichhi!" 
     runs-on: ubuntu-latest
+    
+    # Only run on main branch push (not PRs)
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     
     # Permissions for GHCR push
     permissions:

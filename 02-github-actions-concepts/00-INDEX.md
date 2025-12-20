@@ -15,12 +15,15 @@ These notes are created from our interactive discussion. Each file covers a spec
 | 3 | [03-on-triggers.md](./03-on-triggers.md) | push, pull_request, workflow_dispatch, paths | 8 min |
 | 4 | [04-github-runners.md](./04-github-runners.md) | Where code runs, ubuntu-latest, WSL vs Native | 5 min |
 | 5 | [05-jobs-and-steps.md](./05-jobs-and-steps.md) | jobs, runs-on, permissions, steps | 8 min |
+| 5a | [05a-job-dependencies.md](./05a-job-dependencies.md) | **`needs` keyword - job ordering (NEW!)** | 5 min |
 | 6 | [06-actions-marketplace.md](./06-actions-marketplace.md) | uses, actions/checkout, docker/build-push-action | 5 min |
 | 7 | [07-secrets-and-tokens.md](./07-secrets-and-tokens.md) | GITHUB_TOKEN, secrets management | 5 min |
+| 7a | [07a-github-token-explained.md](./07a-github-token-explained.md) | **GITHUB_TOKEN auto-generated (NEW!)** | 3 min |
 | 8 | [08-caching-in-ci.md](./08-caching-in-ci.md) | type=gha, buildx, why caching matters | 5 min |
 | 9 | [09-complete-workflow-explained.md](./09-complete-workflow-explained.md) | Full workflow line-by-line | 10 min |
 | 10 | [10-interview-questions.md](./10-interview-questions.md) | Common GitHub Actions interview Q&A | 10 min |
 | 11 | [11-visual-workflow-guide.md](./11-visual-workflow-guide.md) | 🎬 Complete visual ASCII guide - MUST READ! | 15 min |
+| 12 | [12-runner-filesystem-deep-dive.md](./12-runner-filesystem-deep-dive.md) | Runner filesystem internals | 10 min |
 
 ---
 
