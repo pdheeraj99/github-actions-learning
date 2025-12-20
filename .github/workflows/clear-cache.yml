@@ -6,8 +6,10 @@ jobs:
   clear-cache:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Clear cache
         run: |
-          gh cache delete --all
+          gh cache delete --all --repo ${{ github.repository }} 
         env:
           GH_TOKEN: ${{ github.token }}
