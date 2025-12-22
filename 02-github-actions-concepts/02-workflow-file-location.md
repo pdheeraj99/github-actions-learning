@@ -23,6 +23,7 @@
 
 ## 2. Common Mistakes
 
+
 ```
 ❌ github/workflows/ci.yml        → Missing dot!
 ❌ .github/workflow/ci.yml        → "workflow" not "workflows"!
